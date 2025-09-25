@@ -92,11 +92,11 @@ body {
 }
 
 /* === Quarter Cards, Metrics, Summary, and Responsive styles === */
-.quarters-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 30px;
-  padding: 40px;
+.quarters-container{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap:24px;
+  padding:28px;
 }
 
 .quarter-card {
