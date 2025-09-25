@@ -1,891 +1,636 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Strategic Roadmap Editor</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            min-height: 100vh;
-            line-height: 1.6;
-        }
-
-        /* Edit Mode Toggle */
-        .edit-mode-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            display: flex;
-            gap: 10px;
-        }
-
-        .edit-btn {
-            padding: 12px 24px;
-            background: white;
-            color: #2c3e50;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-
-        .edit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-
-        .edit-btn.active {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .save-btn {
-            background: #27ae60;
-            color: white;
-        }
-
-        .reset-btn {
-            background: #e67e22;
-            color: white;
-        }
-
-        /* Editable Elements */
-        .editable {
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .editable:hover.edit-mode {
-            background: rgba(255, 255, 255, 0.1);
-            outline: 2px dashed #3498db;
-            outline-offset: 2px;
-            cursor: text;
-        }
-
-        .editable[contenteditable="true"]:focus {
-            outline: 2px solid #3498db;
-            background: rgba(255, 255, 255, 0.2);
-            outline-offset: 2px;
-        }
-
-        /* Container Styles */
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            color: white;
-            padding: 50px 40px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-            animation: pulse 4s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.1; }
-            50% { transform: scale(1.1); opacity: 0.2; }
-        }
-
-        .header h1 {
-            font-size: 3.5em;
-            margin-bottom: 15px;
-            font-weight: 300;
-            position: relative;
-            z-index: 1;
-        }
-
-        .header p {
-            font-size: 1.3em;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-        }
-
-        .timeline-nav {
-            background: #f8f9fa;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .nav-item {
-            padding: 12px 24px;
-            background: white;
-            border: 2px solid #dee2e6;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-        }
-
-        .nav-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            border-color: #3498db;
-        }
-
-        .quarters-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-            padding: 40px;
-        }
-
-        .quarter-card {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            position: relative;
-        }
-
-        .quarter-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-        }
-
-        .quarter-header {
-            padding: 25px 30px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .quarter-actions {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            display: none;
-            gap: 5px;
-        }
-
-        .edit-mode .quarter-actions {
-            display: flex;
-        }
-
-        .action-btn {
-            background: rgba(255,255,255,0.3);
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.8em;
-        }
-
-        .action-btn:hover {
-            background: rgba(255,255,255,0.5);
-        }
-
-        .quarter-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: -20px;
-            width: 100px;
-            height: 100%;
-            background: rgba(255,255,255,0.1);
-            transform: skewX(-15deg);
-        }
-
-        .q1 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .q2 { background: linear-gradient(135deg, #f39c12, #e67e22); }
-        .q3 { background: linear-gradient(135deg, #27ae60, #229954); }
-        .q4 { background: linear-gradient(135deg, #8e44ad, #7d3c98); }
-        .q5 { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .q6 { background: linear-gradient(135deg, #16a085, #138d75); }
-        .q7 { background: linear-gradient(135deg, #e67e22, #d35400); }
-        .q8 { background: linear-gradient(135deg, #2c3e50, #34495e); }
-
-        .quarter-title {
-            font-size: 1.8em;
-            font-weight: 700;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .quarter-subtitle {
-            font-size: 1.1em;
-            opacity: 0.9;
-            position: relative;
-            z-index: 1;
-        }
-
-        .quarter-content {
-            padding: 30px;
-        }
-
-        .focus-areas {
-            margin-bottom: 25px;
-        }
-
-        .focus-title {
-            font-size: 1.2em;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .focus-icon {
-            width: 24px;
-            height: 24px;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.8em;
-            font-weight: bold;
-        }
-
-        .focus-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .focus-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #f1f2f6;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            position: relative;
-        }
-
-        .focus-item:last-child {
-            border-bottom: none;
-        }
-
-        .focus-bullet {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            margin-top: 6px;
-            flex-shrink: 0;
-        }
-
-        .item-text {
-            flex: 1;
-        }
-
-        .item-actions {
-            display: none;
-            gap: 5px;
-            position: absolute;
-            right: 0;
-            top: 12px;
-        }
-
-        .edit-mode .item-actions {
-            display: flex;
-        }
-
-        .item-btn {
-            background: #e74c3c;
-            border: none;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.75em;
-        }
-
-        .add-item-btn {
-            background: #27ae60;
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .edit-mode .add-item-btn {
-            display: inline-block;
-        }
-
-        .deliverables {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-
-        .deliverable-item {
-            background: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            font-weight: 600;
-            color: #2c3e50;
-            position: relative;
-        }
-
-        .deliverable-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px;
-        }
-
-        .metric-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-        }
-
-        .metric-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .metric-label {
-            font-size: 0.85em;
-            opacity: 0.9;
-        }
-
-        .progress-bar {
-            background: #e9ecef;
-            border-radius: 10px;
-            overflow: hidden;
-            height: 8px;
-            margin: 15px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3498db, #2980b9);
-            transition: width 0.3s ease;
-        }
-
-        .year-separator {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 40px 20px;
-            font-size: 2em;
-            font-weight: 300;
-            color: #2c3e50;
-            background: linear-gradient(90deg, transparent, #f8f9fa, transparent);
-            margin: 20px 0;
-            border-radius: 10px;
-        }
-
-        .phase-indicator {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-
-        .summary-section {
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            color: white;
-            padding: 50px 40px;
-            text-align: center;
-            margin-top: 40px;
-        }
-
-        .summary-title {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            font-weight: 300;
-        }
-
-        .summary-metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-            margin: 30px 0;
-        }
-
-        .summary-metric {
-            background: rgba(255,255,255,0.1);
-            padding: 25px;
-            border-radius: 15px;
-        }
-
-        .summary-metric-value {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .summary-metric-label {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-
-        .summary-description {
-            font-size: 1.2em;
-            opacity: 0.9;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #27ae60;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s ease;
-            z-index: 1001;
-        }
-
-        .notification.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        @media (max-width: 768px) {
-            .quarters-container {
-                grid-template-columns: 1fr;
-                padding: 20px;
-                gap: 20px;
-            }
-
-            .header h1 {
-                font-size: 2.5em;
-            }
-
-            .quarter-content {
-                padding: 20px;
-            }
-
-            .metrics {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .edit-mode-toggle {
-                flex-direction: column;
-                top: 10px;
-                right: 10px;
-            }
-
-            .edit-btn {
-                padding: 10px 20px;
-                font-size: 0.9em;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quarterly Strategic Roadmap</title>
+  <meta name="description" content="Interactive quarterly roadmap with edit mode, local save, and executive-ready visuals." />
+  <style>
+    /* ===== Reset / Base ===== */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #2c3e50;
+      line-height: 1.6;
+    }
+
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid #3498db; outline-offset: 2px; }
+
+    /* ===== App Frame ===== */
+    .edit-mode-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: #2c3e50;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,.2);
+      transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.3); }
+    .btn[disabled] { opacity: .6; cursor: not-allowed; }
+    .btn.primary { background: #27ae60; color: #fff; }
+    .btn.warn { background: #e67e22; color: #fff; }
+    .btn.danger { background: #e74c3c; color: #fff; }
+
+    .container {
+      max-width: 1600px;
+      margin: 90px auto 40px auto;
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,.15);
+    }
+
+    /* ===== Header ===== */
+    .header {
+      background: linear-gradient(135deg, #2c3e50, #3498db);
+      color: #fff;
+      padding: 56px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: "";
+      position: absolute; inset: -50% -50% auto auto;
+      width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,.12) 0%, transparent 70%);
+      animation: pulse 6s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity:.1;} 50% { transform: scale(1.06); opacity:.2; } }
+    .header h1 { font-size: clamp(28px, 4vw, 54px); margin: 0 0 10px 0; font-weight: 300; position: relative; z-index: 1; }
+    .header p  { font-size: clamp(14px, 1.6vw, 20px); margin: 0; opacity:.95; position: relative; z-index: 1; }
+
+    /* ===== Top Nav ===== */
+    .timeline-nav {
+      background: #f8f9fa;
+      padding: 18px 20px;
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+      border-bottom: 1px solid #eef1f5;
+    }
+    .nav-item {
+      padding: 10px 18px; border-radius: 25px; background: #fff; border: 2px solid #dee2e6; font-weight: 600; cursor: pointer; transition: .2s;
+    }
+    .nav-item:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,.08); }
+    .nav-item.active { background: linear-gradient(135deg,#3498db,#2980b9); color:#fff; border-color:#3498db; }
+
+    /* ===== Grid ===== */
+    .quarters-container {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 28px; padding: 32px 36px 8px 36px;
+    }
+
+    .year-separator {
+      grid-column: 1 / -1; text-align: center; padding: 28px 16px; margin: 6px 0 14px 0;
+      font-size: clamp(20px, 2.5vw, 32px); font-weight: 300; color: #2c3e50;
+      background: linear-gradient(90deg, transparent, #f8f9fa, transparent);
+      border-radius: 12px;
+    }
+
+    .quarter-card { background:#fff; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,.08); overflow:hidden; position:relative; transition: transform .2s, box-shadow .2s; }
+    .quarter-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,.12); }
+
+    .quarter-header { padding: 26px 30px; color: #fff; position: relative; overflow: hidden; }
+    .quarter-header::before { content: ""; position: absolute; top:0; right:-20px; width: 100px; height: 100%; background: rgba(255,255,255,.12); transform: skewX(-15deg); }
+
+    .q1 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .q2 { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .q3 { background: linear-gradient(135deg, #27ae60, #229954); }
+    .q4 { background: linear-gradient(135deg, #8e44ad, #7d3c98); }
+    .q5 { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .q6 { background: linear-gradient(135deg, #16a085, #138d75); }
+    .q7 { background: linear-gradient(135deg, #e67e22, #d35400); }
+    .q8 { background: linear-gradient(135deg, #2c3e50, #34495e); }
+
+    .quarter-title { font-size: 1.7rem; font-weight: 700; margin: 0 0 6px 0; position: relative; z-index: 1; }
+    .quarter-subtitle { margin: 0; opacity: .95; position: relative; z-index: 1; }
+
+    .quarter-actions { position: absolute; top: 10px; left: 10px; display: none; gap: 6px; }
+    .action-btn { background: rgba(255,255,255,.3); color: #fff; border: 0; padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: .8rem; }
+
+    .phase-indicator { position: absolute; top: 12px; right: 16px; background: rgba(255,255,255,.25); color:#fff; padding: 6px 10px; border-radius: 14px; font-weight: 700; font-size: .8rem; }
+
+    .quarter-content { padding: 22px 26px 26px 26px; }
+
+    .focus-areas { margin-bottom: 18px; }
+    .focus-title { font-weight: 800; color: #2c3e50; margin: 2px 0 10px 0; display: flex; align-items: center; gap: 10px; }
+    .focus-icon { width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, #3498db, #2980b9); display: grid; place-items: center; color: #fff; font-size: .85rem; font-weight: 700; }
+
+    .focus-list { list-style: none; padding: 0; margin: 0; }
+    .focus-item { display: grid; grid-template-columns: 10px 1fr auto; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f2f6; align-items: start; }
+    .focus-item:last-child { border-bottom: 0; }
+    .focus-bullet { width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(135deg, #3498db, #2980b9); margin-top: 8px; }
+    .item-actions { display: none; gap: 6px; }
+    .item-btn { background: #e74c3c; color: #fff; border: 0; padding: 2px 8px; border-radius: 4px; font-size: .75rem; cursor: pointer; }
+
+    .add-item-btn { display: none; background: #27ae60; color:#fff; border:0; padding: 8px 12px; border-radius: 6px; margin-top: 8px; cursor: pointer; }
+
+    .deliverables { background: #f8f9fa; padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+    .deliverable-item { background: #fff; padding: 10px 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,.05); font-weight: 600; color: #2c3e50; }
+    .deliverable-item:last-child { margin-bottom: 0; }
+
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; }
+    .metric-card { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 14px; border-radius: 10px; text-align: center; }
+    .metric-value { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+    .metric-label { font-size: .85rem; opacity: .95; }
+
+    /* ===== Summary ===== */
+    .summary-section { background: linear-gradient(135deg, #2c3e50, #3498db); color: #fff; padding: 48px 36px; text-align:center; margin-top: 20px; }
+    .summary-title { font-size: clamp(22px, 3vw, 40px); font-weight: 300; margin: 0; }
+    .summary-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 22px; margin: 26px 0; }
+    .summary-metric { background: rgba(255,255,255,.12); padding: 20px; border-radius: 14px; }
+    .summary-metric-value { font-size: 2rem; font-weight: 900; margin-bottom: 8px; }
+    .summary-metric-label { opacity: .95; }
+    .summary-description { max-width: 860px; margin: 0 auto; font-size: 1.05rem; opacity: .95; }
+
+    /* ===== Edit Mode ===== */
+    .editable { transition: background .2s ease, outline-color .2s ease; }
+    .editable:hover.edit-mode { background: rgba(255, 255, 255, 0.08); outline: 2px dashed #3498db; outline-offset: 2px; cursor: text; }
+    .editable[contenteditable="true"]:focus { outline: 2px solid #3498db; background: rgba(255,255,255,.2); outline-offset: 2px; }
+    .edit-on .quarter-actions { display: flex; }
+    .edit-on .add-item-btn { display: inline-block; }
+    .edit-on .item-actions { display: flex; }
+
+    /* ===== Snackbar ===== */
+    .notification { position: fixed; bottom: 20px; right: 20px; background: #27ae60; color: #fff; padding: 14px 18px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,.2); transform: translateY(120px); opacity: 0; transition: .3s; z-index: 1001; }
+    .notification.show { transform: translateY(0); opacity: 1; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .quarters-container { grid-template-columns: 1fr; padding: 22px; gap: 18px; }
+      .edit-mode-toggle { flex-direction: column; right: 10px; top: 10px; }
+      .btn { padding: 9px 14px; }
+    }
+
+    /* ===== Print (Export to PDF) ===== */
+    @media print {
+      body { background: #fff; }
+      .edit-mode-toggle, .notification { display: none !important; }
+      .container { box-shadow: none; margin: 0; border-radius: 0; }
+      .quarter-card:hover { transform: none; box-shadow: none; }
+    }
+  </style>
 </head>
 <body>
-    <div class="edit-mode-toggle">
-        <button class="edit-btn" onclick="toggleEditMode()">✏️ Edit Mode</button>
-        <button class="edit-btn save-btn" onclick="saveData()">💾 Save</button>
-        <button class="edit-btn reset-btn" onclick="resetData()">🔄 Reset</button>
-    </div>
+  <!-- Controls -->
+  <div class="edit-mode-toggle" role="region" aria-label="Editing controls">
+    <button class="btn" id="btnEdit" type="button" aria-pressed="false">✏️ Edit Mode</button>
+    <button class="btn primary" id="btnSave" type="button">💾 Save</button>
+    <button class="btn warn" id="btnReset" type="button" title="Clear local edits">🔄 Reset</button>
+    <button class="btn" id="btnOverview" type="button" title="Scroll to Overview">🧭 Overview</button>
+    <button class="btn" id="btnYear1" type="button" title="Scroll to Year 1">1️⃣ Year 1</button>
+    <button class="btn" id="btnYear2" type="button" title="Scroll to Year 2">2️⃣ Year 2</button>
+  </div>
 
-    <div class="notification" id="notification"></div>
+  <div class="notification" id="toast" role="status" aria-live="polite"></div>
 
-    <div class="container">
-        <div class="header">
-            <h1 class="editable" id="headerTitle">Quarterly Strategic Roadmap</h1>
-            <p class="editable" id="headerSubtitle">24-Month Journey to SEO/GEO/AEO/CRO Excellence</p>
+  <main class="container">
+    <!-- Header -->
+    <header class="header" id="top">
+      <h1 class="editable" id="headerTitle">Quarterly Strategic Roadmap</h1>
+      <p class="editable" id="headerSubtitle">24-Month Journey to SEO • GEO/AEO • CRO • UX Excellence</p>
+    </header>
+
+    <!-- Nav -->
+    <nav class="timeline-nav" aria-label="Timeline navigation">
+      <div class="nav-item active" data-scroll="#year1">Year 1 - Foundation</div>
+      <div class="nav-item" data-scroll="#year2">Year 2 - Scaling</div>
+      <div class="nav-item" data-scroll="#summary">Overview</div>
+    </nav>
+
+    <!-- Quarters -->
+    <section class="quarters-container" id="quarters">
+      <!-- Year 1 -->
+      <h2 class="year-separator" id="year1">Year 1 — Foundation</h2>
+
+      <!-- Q1 -->
+      <article class="quarter-card" aria-labelledby="q1title">
+        <div class="quarter-header q1">
+          <div class="quarter-actions"><button class="action-btn" data-duplicate>Duplicate</button></div>
+          <div class="phase-indicator">Q1</div>
+          <h3 class="quarter-title editable" id="q1title">Stabilize &amp; Instrument</h3>
+          <p class="quarter-subtitle editable">Lay the groundwork for findability, measurement, and fast feedback</p>
         </div>
+        <div class="quarter-content">
+          <div class="focus-areas">
+            <div class="focus-title"><span class="focus-icon">🔎</span> Focus Areas</div>
+            <ul class="focus-list">
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Technical SEO hardening (CWV, crawl budget, canonicalization, sitemap hygiene)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">GA4 + CRM stitch (lead events, source/medium → opportunity)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Content audit &amp; hub plan (services, pests, locations; duplicate cleanup)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Form friction baseline (reduce fields, add trust micro-copy)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+            </ul>
+            <button class="add-item-btn" data-add-focus>+ Add Focus Item</button>
+          </div>
 
-        <div class="timeline-nav">
-            <div class="nav-item active" onclick="scrollToYear(1)">Year 1 - Foundation</div>
-            <div class="nav-item" onclick="scrollToYear(2)">Year 2 - Scaling</div>
-            <div class="nav-item" onclick="showOverview()">Overview</div>
+          <div class="deliverables">
+            <div class="deliverable-item editable">Technical SEO remediation brief</div>
+            <div class="deliverable-item editable">Content audit matrix</div>
+            <div class="deliverable-item editable">GA4+CRM map</div>
+            <div class="deliverable-item editable">CRO test plan</div>
+            <div class="deliverable-item editable">Exec dashboard v1</div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric-card"><div class="metric-value editable">+5%</div><div class="metric-label editable">Conv Rate 🧪🎯</div></div>
+            <div class="metric-card"><div class="metric-value editable">60s</div><div class="metric-label editable">Speed-to-Lead 🚀📈</div></div>
+            <div class="metric-card"><div class="metric-value editable">50%</div><div class="metric-label editable">CWV “Good” 🔎🎯</div></div>
+          </div>
         </div>
+      </article>
 
-        <div class="quarters-container" id="quartersContainer">
-            <!-- Quarters will be populated by JavaScript -->
+      <!-- Q2 -->
+      <article class="quarter-card" aria-labelledby="q2title">
+        <div class="quarter-header q2">
+          <div class="phase-indicator">Q2</div>
+          <h3 class="quarter-title editable" id="q2title">Publish the Spine</h3>
+          <p class="quarter-subtitle editable">Launch hubs and establish on-page standards and cadence</p>
         </div>
+        <div class="quarter-content">
+          <div class="focus-areas">
+            <div class="focus-title"><span class="focus-icon">🧩</span> Focus Areas</div>
+            <ul class="focus-list">
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Hub-and-spoke for priority services &amp; locations</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">On-page standards (titles/H1/meta + internal-link blocks)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">2 A/B tests/month (hero CTA, social proof, pricing framing)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Lead routing SLO; fallback if sales offline</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+            </ul>
+            <button class="add-item-btn" data-add-focus>+ Add Focus Item</button>
+          </div>
 
-        <div class="summary-section">
-            <h2 class="summary-title editable" id="summaryTitle">Success Metrics Overview</h2>
-            
-            <div class="summary-metrics" id="summaryMetrics">
-                <!-- Summary metrics will be populated by JavaScript -->
-            </div>
+          <div class="deliverables">
+            <div class="deliverable-item editable">Live hub templates</div>
+            <div class="deliverable-item editable">On-page standard library</div>
+            <div class="deliverable-item editable">4 tests shipped</div>
+            <div class="deliverable-item editable">Dashboard v1.1</div>
+            <div class="deliverable-item editable">Lead routing SLO</div>
+          </div>
 
-            <p class="summary-description editable" id="summaryDescription">
-                This roadmap transforms your organization from SEO basics to industry leadership across all modern optimization channels, 
-                positioning you at the forefront of AI-driven digital marketing excellence.
-            </p>
+          <div class="metrics">
+            <div class="metric-card"><div class="metric-value editable">+10%</div><div class="metric-label editable">Qualified Sessions 🔎</div></div>
+            <div class="metric-card"><div class="metric-value editable">55s</div><div class="metric-label editable">Speed-to-Lead 🚀📈</div></div>
+            <div class="metric-card"><div class="metric-value editable">2/mo</div><div class="metric-label editable">Test Cadence 🧪</div></div>
+          </div>
         </div>
-    </div>
+      </article>
 
-    <script>
-        let editMode = false;
-        let roadmapData = null;
+      <!-- Q3 -->
+      <article class="quarter-card" aria-labelledby="q3title">
+        <div class="quarter-header q3">
+          <div class="phase-indicator">Q3</div>
+          <h3 class="quarter-title editable" id="q3title">Proof of Lift</h3>
+          <p class="quarter-subtitle editable">Show measurable gains and double down</p>
+        </div>
+        <div class="quarter-content">
+          <div class="focus-areas">
+            <div class="focus-title"><span class="focus-icon">📈</span> Focus Areas</div>
+            <ul class="focus-list">
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Authority pages (Aptive vs Orkin/Terminix; objection handling)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Local SEO package (GBP, NAP, schema)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Pricing &amp; testimonial pattern library</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Mobile UX polish (sticky CTA, thumb-zone)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+            </ul>
+            <button class="add-item-btn" data-add-focus>+ Add Focus Item</button>
+          </div>
 
-        // Default data structure
-        const defaultData = {
-            header: {
-                title: "Quarterly Strategic Roadmap",
-                subtitle: "24-Month Journey to SEO/GEO/AEO/CRO Excellence"
-            },
-            summary: {
-                title: "Success Metrics Overview",
-                description: "This roadmap transforms your organization from SEO basics to industry leadership across all modern optimization channels, positioning you at the forefront of AI-driven digital marketing excellence.",
-                metrics: [
-                    { value: "400%", label: "Traffic Growth Target" },
-                    { value: "350%", label: "ROI Achievement" },
-                    { value: "12", label: "Team Members" },
-                    { value: "4", label: "Optimization Channels" }
-                ]
-            },
-            yearSeparator: "🚀 Year 2: Scaling & Advanced Optimization 🚀",
-            quarters: [
-                {
-                    id: "q1-2025",
-                    quarterClass: "q1",
-                    phase: "Foundation",
-                    title: "Q1 2025",
-                    subtitle: "Team Assembly & Infrastructure",
-                    focusIcon: "🚀",
-                    focusAreas: [
-                        "Core Team Hiring: SEO Manager, Content Strategist, Technical SEO Specialist",
-                        "Foundation Setup: Analytics infrastructure, basic tool stack, processes",
-                        "SEO Audit & Strategy: Comprehensive site audit and strategic roadmap",
-                        "Content Framework: Content strategy, editorial calendar, keyword mapping"
-                    ],
-                    deliverables: [
-                        "Complete SEO audit & technical fixes",
-                        "GA4 & analytics setup",
-                        "Content calendar (6 months)",
-                        "Keyword strategy document",
-                        "Team processes & workflows"
-                    ],
-                    metrics: [
-                        { value: "5", label: "Team Members" },
-                        { value: "$95K", label: "Budget" },
-                        { value: "15%", label: "Traffic Goal" }
-                    ],
-                    progressPercent: 12.5
-                },
-                {
-                    id: "q2-2025",
-                    quarterClass: "q2",
-                    phase: "Build",
-                    title: "Q2 2025",
-                    subtitle: "CRO Integration & Content Scale",
-                    focusIcon: "⚡",
-                    focusAreas: [
-                        "CRO Foundation: CRO analyst onboarding, testing framework setup",
-                        "Content Production: Scale content creation, optimize existing content",
-                        "Technical SEO: Core Web Vitals, site speed, mobile optimization",
-                        "Link Building: Initial outreach campaigns and partnership development"
-                    ],
-                    deliverables: [
-                        "First A/B tests launched",
-                        "50 new optimized pages",
-                        "Technical SEO improvements",
-                        "Link building strategy",
-                        "Performance dashboard"
-                    ],
-                    metrics: [
-                        { value: "5", label: "A/B Tests" },
-                        { value: "$185K", label: "Total Budget" },
-                        { value: "35%", label: "Traffic Goal" }
-                    ],
-                    progressPercent: 25
-                },
-                {
-                    id: "q3-2025",
-                    quarterClass: "q3",
-                    phase: "Optimize",
-                    title: "Q3 2025",
-                    subtitle: "Advanced Training & AEO Focus",
-                    focusIcon: "🧠",
-                    focusAreas: [
-                        "AEO Implementation: Voice search optimization, featured snippets strategy",
-                        "Team Training: GEO and AEO specialized training programs",
-                        "Advanced CRO: Multivariate testing, personalization experiments",
-                        "Data Integration: Advanced analytics, attribution modeling"
-                    ],
-                    deliverables: [
-                        "AEO strategy implementation",
-                        "Team certification completion",
-                        "Advanced testing framework",
-                        "Voice search optimization",
-                        "Attribution model setup"
-                    ],
-                    metrics: [
-                        { value: "20", label: "Snippets" },
-                        { value: "$285K", label: "Total Budget" },
-                        { value: "60%", label: "Traffic Goal" }
-                    ],
-                    progressPercent: 37.5
-                },
-                {
-                    id: "q4-2025",
-                    quarterClass: "q4",
-                    phase: "Integrate",
-                    title: "Q4 2025",
-                    subtitle: "Year 1 Optimization & Planning",
-                    focusIcon: "🔄",
-                    focusAreas: [
-                        "Performance Optimization: Data-driven improvements and process refinement",
-                        "Cross-Channel Integration: Unified SEO/GEO/AEO/CRO strategies",
-                        "Year 2 Planning: Advanced strategy development and resource planning",
-                        "ROI Analysis: Comprehensive performance review and optimization"
-                    ],
-                    deliverables: [
-                        "Year 1 performance report",
-                        "Integrated optimization strategy",
-                        "Year 2 strategic plan",
-                        "Process documentation",
-                        "ROI analysis & projections"
-                    ],
-                    metrics: [
-                        { value: "200%", label: "ROI Target" },
-                        { value: "$485K", label: "Year 1 Total" },
-                        { value: "85%", label: "Traffic Goal" }
-                    ],
-                    progressPercent: 50
-                },
-                {
-                    id: "q1-2026",
-                    quarterClass: "q5",
-                    phase: "Scale",
-                    title: "Q1 2026",
-                    subtitle: "Team Expansion & GEO Mastery",
-                    focusIcon: "🎯",
-                    focusAreas: [
-                        "Team Scaling: GEO specialist, UX designer, additional analysts",
-                        "GEO Excellence: AI content optimization, model behavior analysis",
-                        "Enterprise Tools: Advanced platforms and automation systems",
-                        "Predictive Analytics: ML-driven optimization and forecasting"
-                    ],
-                    deliverables: [
-                        "GEO optimization framework",
-                        "AI content strategy",
-                        "Predictive models launch",
-                        "Advanced automation setup",
-                        "Team expansion complete"
-                    ],
-                    metrics: [
-                        { value: "8", label: "Team Size" },
-                        { value: "$665K", label: "Total Budget" },
-                        { value: "150%", label: "Traffic Goal" }
-                    ],
-                    progressPercent: 62.5
-                },
-                {
-                    id: "q2-2026",
-                    quarterClass: "q6",
-                    phase: "Automate",
-                    title: "Q2 2026",
-                    subtitle: "Automation & International",
-                    focusIcon: "🌍",
-                    focusAreas: [
-                        "International SEO: Global expansion strategy and implementation",
-                        "Marketing Automation: Advanced workflows and personalization",
-                        "Content Scaling: AI-assisted content production and optimization",
-                        "Advanced CRO: Dynamic personalization and micro-targeting"
-                    ],
-                    deliverables: [
-                        "International SEO launch",
-                        "Automation workflows",
-                        "AI content pipeline",
-                        "Dynamic personalization",
-                        "Multi-market strategy"
-                    ],
-                    metrics: [
-                        { value: "10", label: "Team Size" },
-                        { value: "$850K", label: "Total Budget" },
-                        { value: "200%", label: "Traffic Goal" }
-                    ],
-                    progressPercent: 75
-                },
-                {
-                    id: "q3-2026",
-                    quarterClass: "q7",
-                    phase: "Innovate",
-                    title: "Q3 2026",
-                    subtitle: "Advanced Analytics & Innovation",
-                    focusIcon: "🔬",
-                    focusAreas: [
-                        "Data Science: Advanced ML models and predictive optimization",
-                        "Innovation Lab: Experimental features and cutting-edge techniques",
-                        "Customer Journey: Full-funnel optimization and attribution",
-                        "Competitive Advantage: Proprietary tools and methodologies"
-                    ],
-                    deliverables: [
-                        "ML optimization models",
-                        "Innovation framework",
-                        "Full-funnel attribution",
-                        "Proprietary tools launch",
-                        "Advanced personalization"
-                    ],
-                    metrics: [
-                        { value: "11", label: "Team Size" },
-                        { value: "$1.05M", label: "Total Budget" },
-                        { value: "300%", label: "Traffic Goal" }
-                    ],
-                    progressPercent: 87.5
-                },
-                {
-                    id: "q4-2026",
-                    quarterClass: "q8",
-                    phase: "Lead",
-                    title: "Q4 2026",
-                    subtitle: "Market Leadership & Excellence",
-                    focusIcon: "👑",
-                    focusAreas: [
-                        "Industry Leadership: Thought leadership, speaking, case studies",
-                        "Excellence Framework: Best practices documentation and training",
-                        "Strategic Planning: Year 3+ roadmap and vision development",
-                        "Continuous Innovation: R&D framework and future-proofing"
-                    ],
-                    deliverables: [
-                        "Industry recognition program",
-                        "Excellence framework",
-                        "Year 3+ strategy",
-                        "Innovation pipeline",
-                        "Market leadership position"
-                    ],
-                    metrics: [
-                        { value: "12", label: "Team Size" },
-                        { value: "$1.2M", label: "Total Budget" },
-                        { value: "400%", label: "Traffic Goal" }
-                    ],
-                    progressPercent: 100
-                }
-            ]
+          <div class="deliverables">
+            <div class="deliverable-item editable">Authority page set</div>
+            <div class="deliverable-item editable">Local SEO pack</div>
+            <div class="deliverable-item editable">Test pattern library</div>
+            <div class="deliverable-item editable">Mobile UX updates</div>
+            <div class="deliverable-item editable">Cohort quality report</div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric-card"><div class="metric-value editable">+18%</div><div class="metric-label editable">Conv Rate 🧪🎯</div></div>
+            <div class="metric-card"><div class="metric-value editable">+10pts</div><div class="metric-label editable">Local Pack 🔎</div></div>
+            <div class="metric-card"><div class="metric-value editable">+20%</div><div class="metric-label editable">Money-Page Sessions 🔎</div></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q4 -->
+      <article class="quarter-card" aria-labelledby="q4title">
+        <div class="quarter-header q4">
+          <div class="phase-indicator">Q4</div>
+          <h3 class="quarter-title editable" id="q4title">Scale the Winners</h3>
+          <p class="quarter-subtitle editable">Promote winning patterns and accelerate production</p>
+        </div>
+        <div class="quarter-content">
+          <div class="focus-areas">
+            <div class="focus-title"><span class="focus-icon">🚀</span> Focus Areas</div>
+            <ul class="focus-list">
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Roll out winning tests site-wide (templates/partials)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Editorial cadence: 2×/week spokes + monthly PR hooks</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Structured FAQs for AEO/GEO</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+            </ul>
+            <button class="add-item-btn" data-add-focus>+ Add Focus Item</button>
+          </div>
+
+          <div class="deliverables">
+            <div class="deliverable-item editable">Site-wide test rollouts</div>
+            <div class="deliverable-item editable">Editorial cadence</div>
+            <div class="deliverable-item editable">AEO/GEO FAQ pack</div>
+            <div class="deliverable-item editable">Dashboard v2</div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric-card"><div class="metric-value editable">+25%</div><div class="metric-label editable">Conv Rate (Y1) 🧪🎯</div></div>
+            <div class="metric-card"><div class="metric-value editable">−15%</div><div class="metric-label editable">CPL (Y1) 📈🚀</div></div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Year 2 -->
+      <h2 class="year-separator" id="year2">Year 2 — Scaling</h2>
+
+      <!-- Q5 -->
+      <article class="quarter-card" aria-labelledby="q5title">
+        <div class="quarter-header q5">
+          <div class="phase-indicator">Q5</div>
+          <h3 class="quarter-title editable" id="q5title">Automation &amp; Personalization</h3>
+          <p class="quarter-subtitle editable">Segmented messaging, richer schema, and offers by region/season</p>
+        </div>
+        <div class="quarter-content">
+          <div class="focus-areas">
+            <div class="focus-title"><span class="focus-icon">🧪</span> Focus Areas</div>
+            <ul class="focus-list">
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Segmented variants (geo/season/pest intent)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Schema deepening (FAQ/HowTo/LocalBusiness)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Multi-touch attribution compare</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+            </ul>
+            <button class="add-item-btn" data-add-focus>+ Add Focus Item</button>
+          </div>
+
+          <div class="deliverables">
+            <div class="deliverable-item editable">Segmented variants live</div>
+            <div class="deliverable-item editable">Advanced schema</div>
+            <div class="deliverable-item editable">MTA model compare</div>
+            <div class="deliverable-item editable">Offer matrix</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q6 -->
+      <article class="quarter-card" aria-labelledby="q6title">
+        <div class="quarter-header q6">
+          <div class="phase-indicator">Q6</div>
+          <h3 class="quarter-title editable" id="q6title">Brand Moat</h3>
+          <p class="quarter-subtitle editable">Authority assets, PR cadence, and funnel experiments</p>
+        </div>
+        <div class="quarter-content">
+          <div class="focus-areas">
+            <div class="focus-title"><span class="focus-icon">🧩</span> Focus Areas</div>
+            <ul class="focus-list">
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Original data asset / interactive tools</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Monthly digital PR</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Funnel experiments (quote builder / SMS / call-first)</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+            </ul>
+            <button class="add-item-btn" data-add-focus>+ Add Focus Item</button>
+          </div>
+
+          <div class="deliverables">
+            <div class="deliverable-item editable">Data asset published</div>
+            <div class="deliverable-item editable">PR calendar live</div>
+            <div class="deliverable-item editable">Funnel experiment set</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q7 -->
+      <article class="quarter-card" aria-labelledby="q7title">
+        <div class="quarter-header q7">
+          <div class="phase-indicator">Q7</div>
+          <h3 class="quarter-title editable" id="q7title">Edge Performance</h3>
+          <p class="quarter-subtitle editable">CWV 90+, topic depth completion, and MV pricing tests</p>
+        </div>
+        <div class="quarter-content">
+          <div class="focus-areas">
+            <div class="focus-title"><span class="focus-icon">🔎</span> Focus Areas</div>
+            <ul class="focus-list">
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">CWV &gt; 90 on key templates</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Close hub topic gaps; refresh aging winners</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Multivariate pricing &amp; guarantees tests</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+            </ul>
+            <button class="add-item-btn" data-add-focus>+ Add Focus Item</button>
+          </div>
+
+          <div class="deliverables">
+            <div class="deliverable-item editable">CWV optimization pass</div>
+            <div class="deliverable-item editable">Topic gap close</div>
+            <div class="deliverable-item editable">MV test results</div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Q8 -->
+      <article class="quarter-card" aria-labelledby="q8title">
+        <div class="quarter-header q8">
+          <div class="phase-indicator">Q8</div>
+          <h3 class="quarter-title editable" id="q8title">Operationalize &amp; Hand Off</h3>
+          <p class="quarter-subtitle editable">Run-the-Business dashboards and playbooks</p>
+        </div>
+        <div class="quarter-content">
+          <div class="focus-areas">
+            <div class="focus-title"><span class="focus-icon">📈</span> Focus Areas</div>
+            <ul class="focus-list">
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Weekly RTB dashboard for leadership</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Evergreen refresh schedule</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+              <li class="focus-item"><span class="focus-bullet"></span><div class="item-text editable">Playbooks: SEO, CRO, GEO/AEO, Content, UX, Analytics</div><div class="item-actions"><button class="item-btn" data-remove>Remove</button></div></li>
+            </ul>
+            <button class="add-item-btn" data-add-focus>+ Add Focus Item</button>
+          </div>
+
+          <div class="deliverables">
+            <div class="deliverable-item editable">RTB dashboard live</div>
+            <div class="deliverable-item editable">Quarterly refresh calendar</div>
+            <div class="deliverable-item editable">Playbook one-pagers</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Summary / Overview -->
+    <section class="summary-section" id="summary" aria-labelledby="summaryTitle">
+      <h2 class="summary-title editable" id="summaryTitle">Success Metrics Overview</h2>
+      <div class="summary-metrics">
+        <div class="summary-metric"><div class="summary-metric-value editable">+20% → +35%</div><div class="summary-metric-label editable">Qualified Organic Sessions (Y1 → Y2) 🔎</div></div>
+        <div class="summary-metric"><div class="summary-metric-value editable">+25% → +50%</div><div class="summary-metric-label editable">Lead Conversion Rate 🧪🎯</div></div>
+        <div class="summary-metric"><div class="summary-metric-value editable">−15% → −30%</div><div class="summary-metric-label editable">CPL (blended) 📈🚀</div></div>
+        <div class="summary-metric"><div class="summary-metric-value editable">60s → 30s</div><div class="summary-metric-label editable">Speed-to-Lead 🚀📈</div></div>
+        <div class="summary-metric"><div class="summary-metric-value editable">70% → 90%</div><div class="summary-metric-label editable">CWV “Good” on key templates 🔎🎯</div></div>
+        <div class="summary-metric"><div class="summary-metric-value editable">+10 → +20 pts</div><div class="summary-metric-label editable">Local Pack Visibility 🔎</div></div>
+      </div>
+      <p class="summary-description editable">This roadmap aligns traffic growth, conversion lift, and brand trust into a single operating plan—sequenced by quarter, layered by pillar, and measured by outcomes leadership cares about.</p>
+    </section>
+  </main>
+
+  <script>
+    // ===== Utilities =====
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    const STORAGE_KEY = 'qr_v1';
+    const toast = document.getElementById('toast');
+    const body = document.body;
+
+    function showToast(msg, tone = 'success') {
+      toast.textContent = msg;
+      toast.style.background = tone === 'warn' ? '#e67e22' : tone === 'danger' ? '#e74c3c' : '#27ae60';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+
+    function setEditMode(on) {
+      const btn = document.getElementById('btnEdit');
+      btn.setAttribute('aria-pressed', String(on));
+      btn.classList.toggle('danger', on);
+      btn.textContent = on ? '🛠️ Editing (on)' : '✏️ Edit Mode';
+      body.classList.toggle('edit-on', on);
+      $$('.editable').forEach(el => el.setAttribute('contenteditable', on ? 'true' : 'false'));
+    }
+
+    function saveAll() {
+      const content = {};
+      $$('.editable').forEach(el => {
+        const id = el.id || el.closest('[aria-labelledby]')?.getAttribute('aria-labelledby') || null;
+        const key = id ? `${id}::${Array.prototype.indexOf.call(el.parentNode.children, el)}` : el.outerHTML.slice(0, 30);
+        content[key] = el.innerHTML;
+      });
+      // Save structure (focus items) as HTML for simplicity
+      content.__quarters_html = $('#quarters').innerHTML;
+      content.__summary_html = $('#summary').innerHTML;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
+      showToast('Saved locally. Commit code for team‑wide changes.');
+    }
+
+    function loadAll() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      try {
+        const data = JSON.parse(raw);
+        if (data.__quarters_html) $('#quarters').innerHTML = data.__quarters_html;
+        if (data.__summary_html) $('#summary').innerHTML = data.__summary_html;
+        // Rebind events after restoring HTML
+        bindDynamicHandlers();
+        return true;
+      } catch (e) {
+        console.warn('Failed to load saved content', e);
+      }
+      return false;
+    }
+
+    function resetAll() {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+
+    function smoothScrollTo(targetSel) {
+      const el = typeof targetSel === 'string' ? $(targetSel) : targetSel;
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ===== Dynamic list handlers (add/remove focus items) =====
+    function handleAddFocus(evt) {
+      const container = evt.target.closest('.focus-areas');
+      if (!container) return;
+      const ul = container.querySelector('.focus-list');
+      const li = document.createElement('li');
+      li.className = 'focus-item';
+      li.innerHTML = `
+        <span class="focus-bullet"></span>
+        <div class="item-text editable">New focus item</div>
+        <div class="item-actions"><button class="item-btn" data-remove>Remove</button></div>
+      `;
+      ul.appendChild(li);
+      if (body.classList.contains('edit-on')) li.querySelector('.editable').setAttribute('contenteditable', 'true');
+    }
+
+    function handleRemove(evt) {
+      const li = evt.target.closest('.focus-item');
+      if (li) li.remove();
+    }
+
+    function handleDuplicateQuarter(evt) {
+      const card = evt.target.closest('.quarter-card');
+      if (!card) return;
+      const clone = card.cloneNode(true);
+      // Update phase indicator (visual aid only)
+      const ind = clone.querySelector('.phase-indicator');
+      if (ind) ind.textContent = ind.textContent + '*';
+      card.after(clone);
+      bindDynamicHandlers();
+      if (body.classList.contains('edit-on')) $$('.editable', clone).forEach(el => el.setAttribute('contenteditable', 'true'));
+      showToast('Quarter duplicated');
+    }
+
+    function bindDynamicHandlers(root = document) {
+      // Add buttons
+      $$('[data-add-focus]', root).forEach(btn => btn.onclick = handleAddFocus);
+      // Remove buttons
+      $$('[data-remove]', root).forEach(btn => btn.onclick = handleRemove);
+      // Duplicate quarter
+      $$('[data-duplicate]', root).forEach(btn => btn.onclick = handleDuplicateQuarter);
+      // Rebind nav items after HTML restore
+      $$('.timeline-nav .nav-item').forEach((item, i) => {
+        item.onclick = () => {
+          $$('.timeline-nav .nav-item').forEach(n => n.classList.remove('active'));
+          item.classList.add('active');
+          smoothScrollTo(item.getAttribute('data-scroll'));
         };
+      });
+    }
 
-        // Initialize data from localStorage or use default
-        function initializeData() {
-            const savedData = localStorage.getItem('roadmapData');
-            if (savedData) {
-                roadmapData = JSON.parse(savedData);
-            } else {
-                roadmapData = JSON.parse(JSON.stringify(defaultData));
-            }
-            renderContent();
+    // ===== Init =====
+    window.addEventListener('DOMContentLoaded', () => {
+      // Load any saved content
+      const loaded = loadAll();
+      bindDynamicHandlers();
+
+      // Wire buttons
+      $('#btnEdit').addEventListener('click', () => {
+        const on = !body.classList.contains('edit-on');
+        setEditMode(on);
+      });
+      $('#btnSave').addEventListener('click', saveAll);
+      $('#btnReset').addEventListener('click', () => {
+        if (confirm('Clear your local edits and reload?')) resetAll();
+      });
+      $('#btnOverview').addEventListener('click', () => smoothScrollTo('#summary'));
+      $('#btnYear1').addEventListener('click', () => smoothScrollTo('#year1'));
+      $('#btnYear2').addEventListener('click', () => smoothScrollTo('#year2'));
+
+      // Accessibility helpers
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+          e.preventDefault(); saveAll(); showToast('Saved (local)');
         }
-
-        // Render all content
-        function renderContent() {
-            // Update header
-            document.getElementById('headerTitle').textContent = roadmapData.header.title;
-            document.getElementById('headerSubtitle').textContent = roadmapData.header.subtitle;
-            
-            // Update summary
-            document.getElementById('summaryTitle').textContent = roadmapData.summary.title;
-            document.getElementById('summaryDescription').textContent = roadmapData.summary.description;
-            
-            // Update summary metrics
-            const summaryMetricsContainer = document.getElementById('summaryMetrics');
-            summaryMetricsContainer.innerHTML = '';
-            roadmapData.summary.metrics.forEach((metric, index) => {
-                const metricDiv = document.createElement('div');
-                metricDiv.className = 'summary-metric';
-                metricDiv.innerHTML = `
-                    <div class="summary-metric-value editable" data-path="summary.metrics.${index}.value">${metric.value}</div>
-                    <div class="summary-metric-label editable" data-path="summary.metrics.${index}.label">${metric.label}</div>
-                `;
-                summaryMetricsContainer.appendChild(metricDiv);
-            });
-            
-            // Render quarters
-            renderQuarters();
-            
-            // Re-apply edit mode if active
-            if (editMode) {
-                applyEditMode();
-            }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+          e.preventDefault(); setEditMode(!body.classList.contains('edit-on'));
         }
+      });
 
-        // Render quarters
-        function renderQuarters() {
-            const container = document.getElementById('quartersContainer');
-            container.innerHTML = '';
-            
-            roadmapData.quarters.forEach((quarter, qIndex) => {
-                // Add year separator before Q1 2026
-                if (quarter.id === 'q1-2026') {
-                    const separator = document.createElement('div');
-                    separator.className = 'year-separator editable';
-                    separator.setAttribute('data-path', 'yearSeparator');
-                    separator.textContent = roadmapData.yearSeparator;
-                    container.appendChild(separator);
-                }
-                
-                // Create quarter card
-                const quarterCard = document.createElement('div');
-                quarterCard.className = 'quarter-card';
-                
-                quarterCard.innerHTML = `
-                    <div class="quarter-header ${quarter.quarterClass}">
-                        <div class="quarter-actions">
-                            <button class="action-btn" onclick="duplicateQuarter(${qIndex})">📋 Duplicate</button>
-                            <button class="action-btn" onclick="deleteQuarter(${qIndex})">🗑️ Delete</button>
-                        </div>
-                        <div class="phase-indicator editable" data-path="quarters.${qIndex}.phase">${quarter.phase}</div>
-                        <div class="quarter-title editable" data-path="quarters.${qIndex}.title">${quarter.title}</div>
-                        <div class="quarter-subtitle editable" data-path="quarters.${qIndex}.subtitle">${quarter.subtitle}</div>
-                    </div>
-                    <div class="quarter-content">
-                        <div class="focus-areas">
-                            <div class="focus-title">
-                                <div class="focus-icon editable" data-path="quarters.${qIndex}.focusIcon">${quarter.focusIcon}</div>
-                                Strategic Focus Areas
-                            </div>
+      if (!loaded) {
+        // First-time hint
+        showToast('Tip: toggle ✏️ Edit Mode to modify text.');
+      }
+    });
+  </script>
+</body>
+</html>
