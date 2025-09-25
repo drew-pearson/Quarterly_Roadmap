@@ -1,39 +1,854 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quarterly Strategic Roadmap</title>
-  <link rel="stylesheet" href="./style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quarterly Strategic Roadmap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.1; }
+            50% { transform: scale(1.1); opacity: 0.2; }
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-nav {
+            background: #f8f9fa;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border-color: #3498db;
+        }
+
+        .quarters-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            padding: 40px;
+        }
+
+        .quarter-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .quarter-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+
+        .quarter-header {
+            padding: 25px 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quarter-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -20px;
+            width: 100px;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            transform: skewX(-15deg);
+        }
+
+        .q1 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .q2 { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .q3 { background: linear-gradient(135deg, #27ae60, #229954); }
+        .q4 { background: linear-gradient(135deg, #8e44ad, #7d3c98); }
+        .q5 { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .q6 { background: linear-gradient(135deg, #16a085, #138d75); }
+        .q7 { background: linear-gradient(135deg, #e67e22, #d35400); }
+        .q8 { background: linear-gradient(135deg, #2c3e50, #34495e); }
+
+        .quarter-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quarter-subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quarter-content {
+            padding: 30px;
+        }
+
+        .focus-areas {
+            margin-bottom: 25px;
+        }
+
+        .focus-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .focus-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .focus-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .focus-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f2f6;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .focus-item:last-child {
+            border-bottom: none;
+        }
+
+        .focus-bullet {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .deliverables {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .deliverable-item {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .deliverable-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 8px;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            transition: width 0.3s ease;
+        }
+
+        .year-separator {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 2em;
+            font-weight: 300;
+            color: #2c3e50;
+            background: linear-gradient(90deg, transparent, #f8f9fa, transparent);
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+
+        .phase-indicator {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .summary-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        .summary-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .summary-metric {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        .summary-metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .summary-metric-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .summary-description {
+            font-size: 1.2em;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .quarters-container {
+                grid-template-columns: 1fr;
+                padding: 20px;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 2.5em;
+            }
+
+            .quarter-content {
+                padding: 20px;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h1 id="headerTitle">Quarterly Strategic Roadmap</h1>
-      <p id="headerSubtitle">24-Month Journey to SEO/GEO/AEO/CRO Excellence</p>
+    <script>
+        // ===============================================
+        // EASY EDIT SECTION - MODIFY CONTENT HERE
+        // ===============================================
+        
+        const ROADMAP_CONFIG = {
+            // Main header content
+            header: {
+                title: "Quarterly Strategic Roadmap",
+                subtitle: "24-Month Journey to SEO/GEO/AEO/CRO Excellence"
+            },
+            
+            // Overall summary metrics
+            overallMetrics: {
+                trafficGrowth: "400%",
+                roiTarget: "350%", 
+                totalBudget: "$1.2M",
+                teamSize: "5→12",
+                channels: "4"
+            },
+            
+            // Year separator content
+            yearSeparator: "🚀 Year 2: Scaling & Advanced Optimization 🚀",
+            
+            // Summary section content
+            summary: {
+                title: "Success Metrics Overview",
+                description: "This roadmap transforms your organization from SEO basics to industry leadership across all modern optimization channels, positioning you at the forefront of AI-driven digital marketing excellence.",
+                metrics: [
+                    { value: "400%", label: "Traffic Growth Target" },
+                    { value: "350%", label: "ROI Achievement" },
+                    { value: "12", label: "Team Members" },
+                    { value: "4", label: "Optimization Channels" }
+                ]
+            }
+        };
+
+        // Quarterly data - Edit this to change quarter content
+        const QUARTERS_DATA = [
+            {
+                id: "q1-2025",
+                quarterClass: "q1",
+                phase: "Foundation",
+                title: "Q1 2025",
+                subtitle: "Team Assembly & Infrastructure",
+                focusIcon: "🚀",
+                focusAreas: [
+                    "Core Team Hiring: SEO Manager, Content Strategist, Technical SEO Specialist",
+                    "Foundation Setup: Analytics infrastructure, basic tool stack, processes", 
+                    "SEO Audit & Strategy: Comprehensive site audit and strategic roadmap",
+                    "Content Framework: Content strategy, editorial calendar, keyword mapping"
+                ],
+                deliverables: [
+                    "Complete SEO audit & technical fixes",
+                    "GA4 & analytics setup", 
+                    "Content calendar (6 months)",
+                    "Keyword strategy document",
+                    "Team processes & workflows"
+                ],
+                metrics: [
+                    { value: "5", label: "Team Members" },
+                    { value: "$95K", label: "Budget" },
+                    { value: "15%", label: "Traffic Goal" }
+                ],
+                progressPercent: 12.5
+            },
+            {
+                id: "q2-2025", 
+                quarterClass: "q2",
+                phase: "Build",
+                title: "Q2 2025",
+                subtitle: "CRO Integration & Content Scale",
+                focusIcon: "⚡",
+                focusAreas: [
+                    "CRO Foundation: CRO analyst onboarding, testing framework setup",
+                    "Content Production: Scale content creation, optimize existing content",
+                    "Technical SEO: Core Web Vitals, site speed, mobile optimization", 
+                    "Link Building: Initial outreach campaigns and partnership development"
+                ],
+                deliverables: [
+                    "First A/B tests launched",
+                    "50 new optimized pages",
+                    "Technical SEO improvements", 
+                    "Link building strategy",
+                    "Performance dashboard"
+                ],
+                metrics: [
+                    { value: "5", label: "A/B Tests" },
+                    { value: "$185K", label: "Total Budget" },
+                    { value: "35%", label: "Traffic Goal" }
+                ],
+                progressPercent: 25
+            },
+            {
+                id: "q3-2025",
+                quarterClass: "q3", 
+                phase: "Optimize",
+                title: "Q3 2025",
+                subtitle: "Advanced Training & AEO Focus",
+                focusIcon: "🧠",
+                focusAreas: [
+                    "AEO Implementation: Voice search optimization, featured snippets strategy",
+                    "Team Training: GEO and AEO specialized training programs",
+                    "Advanced CRO: Multivariate testing, personalization experiments",
+                    "Data Integration: Advanced analytics, attribution modeling"
+                ],
+                deliverables: [
+                    "AEO strategy implementation",
+                    "Team certification completion",
+                    "Advanced testing framework",
+                    "Voice search optimization", 
+                    "Attribution model setup"
+                ],
+                metrics: [
+                    { value: "20", label: "Snippets" },
+                    { value: "$285K", label: "Total Budget" },
+                    { value: "60%", label: "Traffic Goal" }
+                ],
+                progressPercent: 37.5
+            },
+            {
+                id: "q4-2025",
+                quarterClass: "q4",
+                phase: "Integrate", 
+                title: "Q4 2025",
+                subtitle: "Year 1 Optimization & Planning",
+                focusIcon: "🔄",
+                focusAreas: [
+                    "Performance Optimization: Data-driven improvements and process refinement",
+                    "Cross-Channel Integration: Unified SEO/GEO/AEO/CRO strategies",
+                    "Year 2 Planning: Advanced strategy development and resource planning",
+                    "ROI Analysis: Comprehensive performance review and optimization"
+                ],
+                deliverables: [
+                    "Year 1 performance report",
+                    "Integrated optimization strategy", 
+                    "Year 2 strategic plan",
+                    "Process documentation",
+                    "ROI analysis & projections"
+                ],
+                metrics: [
+                    { value: "200%", label: "ROI Target" },
+                    { value: "$485K", label: "Year 1 Total" },
+                    { value: "85%", label: "Traffic Goal" }
+                ],
+                progressPercent: 50
+            },
+            {
+                id: "q1-2026",
+                quarterClass: "q5",
+                phase: "Scale",
+                title: "Q1 2026", 
+                subtitle: "Team Expansion & GEO Mastery",
+                focusIcon: "🎯",
+                focusAreas: [
+                    "Team Scaling: GEO specialist, UX designer, additional analysts",
+                    "GEO Excellence: AI content optimization, model behavior analysis",
+                    "Enterprise Tools: Advanced platforms and automation systems",
+                    "Predictive Analytics: ML-driven optimization and forecasting"
+                ],
+                deliverables: [
+                    "GEO optimization framework",
+                    "AI content strategy",
+                    "Predictive models launch",
+                    "Advanced automation setup",
+                    "Team expansion complete"
+                ],
+                metrics: [
+                    { value: "8", label: "Team Size" },
+                    { value: "$665K", label: "Total Budget" },
+                    { value: "150%", label: "Traffic Goal" }
+                ],
+                progressPercent: 62.5
+            },
+            {
+                id: "q2-2026",
+                quarterClass: "q6",
+                phase: "Automate",
+                title: "Q2 2026",
+                subtitle: "Automation & International",
+                focusIcon: "🌍", 
+                focusAreas: [
+                    "International SEO: Global expansion strategy and implementation",
+                    "Marketing Automation: Advanced workflows and personalization",
+                    "Content Scaling: AI-assisted content production and optimization",
+                    "Advanced CRO: Dynamic personalization and micro-targeting"
+                ],
+                deliverables: [
+                    "International SEO launch",
+                    "Automation workflows",
+                    "AI content pipeline",
+                    "Dynamic personalization",
+                    "Multi-market strategy"
+                ],
+                metrics: [
+                    { value: "10", label: "Team Size" },
+                    { value: "$850K", label: "Total Budget" },
+                    { value: "200%", label: "Traffic Goal" }
+                ],
+                progressPercent: 75
+            },
+            {
+                id: "q3-2026", 
+                quarterClass: "q7",
+                phase: "Innovate",
+                title: "Q3 2026",
+                subtitle: "Advanced Analytics & Innovation",
+                focusIcon: "🔬",
+                focusAreas: [
+                    "Data Science: Advanced ML models and predictive optimization",
+                    "Innovation Lab: Experimental features and cutting-edge techniques",
+                    "Customer Journey: Full-funnel optimization and attribution",
+                    "Competitive Advantage: Proprietary tools and methodologies"
+                ],
+                deliverables: [
+                    "ML optimization models",
+                    "Innovation framework", 
+                    "Full-funnel attribution",
+                    "Proprietary tools launch",
+                    "Advanced personalization"
+                ],
+                metrics: [
+                    { value: "11", label: "Team Size" },
+                    { value: "$1.05M", label: "Total Budget" },
+                    { value: "300%", label: "Traffic Goal" }
+                ],
+                progressPercent: 87.5
+            },
+            {
+                id: "q4-2026",
+                quarterClass: "q8",
+                phase: "Lead",
+                title: "Q4 2026",
+                subtitle: "Market Leadership & Excellence",
+                focusIcon: "👑",
+                focusAreas: [
+                    "Industry Leadership: Thought leadership, speaking, case studies",
+                    "Excellence Framework: Best practices documentation and training", 
+                    "Strategic Planning: Year 3+ roadmap and vision development",
+                    "Continuous Innovation: R&D framework and future-proofing"
+                ],
+                deliverables: [
+                    "Industry recognition program",
+                    "Excellence framework",
+                    "Year 3+ strategy", 
+                    "Innovation pipeline",
+                    "Market leadership position"
+                ],
+                metrics: [
+                    { value: "12", label: "Team Size" },
+                    { value: "$1.2M", label: "Total Budget" },
+                    { value: "400%", label: "Traffic Goal" }
+                ],
+                progressPercent: 100
+            }
+        ];
+
+        // ===============================================
+        // END EASY EDIT SECTION
+        // ===============================================
+    </script>
+
+    <div class="container">
+        <div class="header">
+            <h1 id="headerTitle">Quarterly Strategic Roadmap</h1>
+            <p id="headerSubtitle">24-Month Journey to SEO/GEO/AEO/CRO Excellence</p>
+        </div>
+
+        <div class="timeline-nav">
+            <div class="nav-item active" onclick="scrollToYear(1)">Year 1 - Foundation</div>
+            <div class="nav-item" onclick="scrollToYear(2)">Year 2 - Scaling</div>
+            <div class="nav-item" onclick="showOverview()">Overview</div>
+        </div>
+
+        <div class="quarters-container" id="quartersContainer">
+            <!-- Quarters will be populated by JavaScript -->
+        </div>
+
+        <div class="summary-section">
+            <h2 class="summary-title" id="summaryTitle">Success Metrics Overview</h2>
+            
+            <div class="summary-metrics" id="summaryMetrics">
+                <!-- Summary metrics will be populated by JavaScript -->
+            </div>
+
+            <p class="summary-description" id="summaryDescription">
+                This roadmap transforms your organization from SEO basics to industry leadership across all modern optimization channels, 
+                positioning you at the forefront of AI-driven digital marketing excellence.
+            </p>
+        </div>
     </div>
 
-    <div class="timeline-nav">
-      <div class="nav-item active" data-year="1" onclick="scrollToYear(1)">Year 1 - Foundation</div>
-      <div class="nav-item" data-year="2" onclick="scrollToYear(2)">Year 2 - Scaling</div>
-      <div class="nav-item" onclick="showOverview()">Overview</div>
-    </div>
+    <script>
+        // Populate content from configuration
+        function initializeContent() {
+            // Set header content
+            document.getElementById('headerTitle').textContent = ROADMAP_CONFIG.header.title;
+            document.getElementById('headerSubtitle').textContent = ROADMAP_CONFIG.header.subtitle;
+            
+            // Set summary content  
+            document.getElementById('summaryTitle').textContent = ROADMAP_CONFIG.summary.title;
+            document.getElementById('summaryDescription').textContent = ROADMAP_CONFIG.summary.description;
+            
+            // Create summary metrics
+            const summaryMetricsContainer = document.getElementById('summaryMetrics');
+            ROADMAP_CONFIG.summary.metrics.forEach(metric => {
+                const metricDiv = document.createElement('div');
+                metricDiv.className = 'summary-metric';
+                metricDiv.innerHTML = `
+                    <div class="summary-metric-value">${metric.value}</div>
+                    <div class="summary-metric-label">${metric.label}</div>
+                `;
+                summaryMetricsContainer.appendChild(metricDiv);
+            });
+            
+            // Create quarters
+            createQuarters();
+        }
 
-    <div class="quarters-container" id="quartersContainer">
-      <!-- Quarters will be populated by JavaScript -->
-    </div>
+        function createQuarters() {
+            const container = document.getElementById('quartersContainer');
+            
+            QUARTERS_DATA.forEach((quarter, index) => {
+                // Add year separator before Q1 2026
+                if (quarter.id === 'q1-2026') {
+                    const separator = document.createElement('div');
+                    separator.className = 'year-separator';
+                    separator.textContent = ROADMAP_CONFIG.yearSeparator;
+                    container.appendChild(separator);
+                }
+                
+                // Create quarter card
+                const quarterCard = document.createElement('div');
+                quarterCard.className = 'quarter-card';
+                
+                quarterCard.innerHTML = `
+                    <div class="quarter-header ${quarter.quarterClass}">
+                        <div class="phase-indicator">${quarter.phase}</div>
+                        <div class="quarter-title">${quarter.title}</div>
+                        <div class="quarter-subtitle">${quarter.subtitle}</div>
+                    </div>
+                    <div class="quarter-content">
+                        <div class="focus-areas">
+                            <div class="focus-title">
+                                <div class="focus-icon">${quarter.focusIcon}</div>
+                                Strategic Focus Areas
+                            </div>
+                            <ul class="focus-list">
+                                ${quarter.focusAreas.map(area => `
+                                    <li class="focus-item">
+                                        <div class="focus-bullet"></div>
+                                        <span><strong>${area.split(':')[0]}:</strong> ${area.split(':')[1] || ''}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
 
-    <div class="summary-section">
-      <h2 class="summary-title" id="summaryTitle">Success Metrics Overview</h2>
-      <div class="summary-metrics" id="summaryMetrics"></div>
-      <p class="summary-description" id="summaryDescription">
-        This roadmap transforms your organization from SEO basics to industry leadership across all
-        modern optimization channels, positioning you at the forefront of AI-driven digital
-        marketing excellence.
-      </p>
-    </div>
-  </div>
+                        <div class="deliverables">
+                            <div class="focus-title">
+                                <div class="focus-icon">📋</div>
+                                Key Deliverables
+                            </div>
+                            ${quarter.deliverables.map(deliverable => `
+                                <div class="deliverable-item">${deliverable}</div>
+                            `).join('')}
+                        </div>
 
-  <script src="./script.js"></script>
+                        <div class="metrics">
+                            ${quarter.metrics.map(metric => `
+                                <div class="metric-card">
+                                    <div class="metric-value">${metric.value}</div>
+                                    <div class="metric-label">${metric.label}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${quarter.progressPercent}%;"></div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(quarterCard);
+            });
+        }
+
+        function scrollToYear(year) {
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            if (year === 1) {
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+                // Scroll to Q1
+                document.querySelector('.quarter-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (year === 2) {
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+                // Scroll to year 2 separator
+                document.querySelector('.year-separator').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        function showOverview() {
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-item')[2].classList.add('active');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Add hover effects and interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeContent();
+            
+            // Add hover effects after content is created
+            setTimeout(() => {
+                document.querySelectorAll('.quarter-card').forEach(card => {
+                    card.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateY(-8px) scale(1.02)';
+                    });
+                    
+                    card.addEventListener('mouseleave', function() {
+                        this.style.transform = 'translateY(0) scale(1)';
+                    });
+                });
+
+                // Animate progress bars on scroll
+                function animateProgressBars() {
+                    const progressBars = document.querySelectorAll('.progress-fill');
+                    
+                    progressBars.forEach(bar => {
+                        const rect = bar.getBoundingClientRect();
+                        if (rect.top < window.innerHeight && rect.bottom >= 0) {
+                            const width = bar.style.width;
+                            bar.style.width = '0%';
+                            setTimeout(() => {
+                                bar.style.width = width;
+                            }, 100);
+                        }
+                    });
+                }
+
+                // Initial animation
+                setTimeout(animateProgressBars, 1000);
+
+                // Scroll-based animations
+                window.addEventListener('scroll', () => {
+                    const cards = document.querySelectorAll('.quarter-card');
+                    cards.forEach((card, index) => {
+                        const rect = card.getBoundingClientRect();
+                        if (rect.top < window.innerHeight * 0.8) {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }
+                    });
+                });
+
+                // Initialize cards with animation prep
+                document.querySelectorAll('.quarter-card').forEach(card => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.6s ease';
+                });
+
+                // Show first few cards immediately
+                setTimeout(() => {
+                    document.querySelectorAll('.quarter-card').forEach((card, index) => {
+                        if (index < 2) {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                        }
+                    });
+                }, 300);
+            }, 100);
+        });
+    </script>
 </body>
 </html>
